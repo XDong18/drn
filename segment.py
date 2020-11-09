@@ -328,15 +328,17 @@ def train(train_loader, model, criterion, optimizer, epoch,
 
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
+    args = parse_args()
     torch.save(state, filename)
     if is_best:
-        shutil.copyfile(filename, 'model_best.pth.tar')
+        shutil.copyfile(filename, join(args.save_path, 'model_best.pth.tar'))
 
 
 def train_seg(args):
     batch_size = args.batch_size
     num_workers = args.workers
     crop_size = args.crop_size
+    # checkpoint_dir = args.checkpoint_dir
 
     print(' '.join(sys.argv))
 
@@ -422,6 +424,7 @@ def train_seg(args):
         is_best = prec1 > best_prec1
         best_prec1 = max(prec1, best_prec1)
         checkpoint_path = os.path.join(args.save_path, 'checkpoint_latest.pth.tar')
+        # checkpoint_path = os.path.join(checkpoint_dir,'checkpoint_{}.pth.tar'.format(epoch))
         save_checkpoint({
             'epoch': epoch + 1,
             'arch': args.arch,
@@ -723,6 +726,7 @@ def parse_args():
                         help='Turn on multi-scale testing')
     parser.add_argument('--with-gt', action='store_true')
     parser.add_argument('--test-suffix', default='', type=str)
+    parser.add_argument('-o', '--checkpoint-dir') 
     args = parser.parse_args()
 
     assert args.classes > 0
@@ -738,6 +742,8 @@ def parse_args():
 
 def main():
     args = parse_args()
+    if not exists(args.save_path):
+        os.makedirs(args.save_path)
     if args.cmd == 'train':
         train_seg(args)
     elif args.cmd == 'test':
