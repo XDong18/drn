@@ -380,7 +380,7 @@ def train_seg(args):
             transforms.ToTensor(),
             normalize,
         ]), list_dir=args.list_dir),
-        batch_size=batch_size, shuffle=False, num_workers=num_workers,
+        batch_size=4, shuffle=False, num_workers=num_workers,
         pin_memory=True, drop_last=True
     )
 
