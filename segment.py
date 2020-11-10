@@ -25,6 +25,7 @@ from torch.autograd import Variable
 
 import drn
 import data_transforms as transforms
+from miou import RunningConfusionMatrix
 
 try:
     from modules import batchnormsync
@@ -198,6 +199,10 @@ class SegListMS(torch.utils.data.Dataset):
 
 
 def validate(val_loader, model, criterion, eval_score=None, print_freq=10):
+    # miou part >>>
+    confusion_labels = np.arange(0, 19)
+    confusion_matrix = RunningConfusionMatrix(confusion_labels)
+    # miou part <<<
     batch_time = AverageMeter()
     losses = AverageMeter()
     score = AverageMeter()
@@ -218,6 +223,7 @@ def validate(val_loader, model, criterion, eval_score=None, print_freq=10):
         # compute output
         output = model(input_var)[0]
         loss = criterion(output, target_var)
+        confusion_matrix.update_matrix(target, output)
 
         # measure accuracy and record loss
         # prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
@@ -236,10 +242,13 @@ def validate(val_loader, model, criterion, eval_score=None, print_freq=10):
                         'Score {score.val:.3f} ({score.avg:.3f})'.format(
                 i, len(val_loader), batch_time=batch_time, loss=losses,
                 score=score))
-
+    
+    miou, top_1, top_5 = confusion_matrix.compute_current_mean_intersection_over_union()
     logger.info(' * Score {top1.avg:.3f}'.format(top1=score))
-
-    return score.avg
+    logger.info(' * mIoU {top1:.3f}'.format(top1=miou))
+    confusion_matrix.show_classes()
+    
+    return miou
 
 
 class AverageMeter(object):
