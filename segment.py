@@ -247,7 +247,7 @@ def validate(val_loader, model, criterion, eval_score=None, print_freq=10):
     logger.info(' * Score {top1.avg:.3f}'.format(top1=score))
     logger.info(' * mIoU {top1:.3f}'.format(top1=miou))
     confusion_matrix.show_classes()
-    
+
     return miou
 
 
